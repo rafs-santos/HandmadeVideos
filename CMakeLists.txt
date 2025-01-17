@@ -5,7 +5,6 @@ project(MyGame VERSION 0.0.1)
 include(cmake/StandardProjectSettings.cmake)
 if(MSVC)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi /FC")
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
 endif()
 
 
@@ -40,6 +39,8 @@ if (MSVC)
   target_link_libraries(
     Handmade
     PRIVATE
+        project_options
+        project_warnings
         user32.lib
         gdi32.lib   
     )
