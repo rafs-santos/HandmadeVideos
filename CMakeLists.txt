@@ -30,8 +30,9 @@ add_executable(Handmade WIN32)
 
 target_sources(
     Handmade
-    PRIVATE
-       "main.cpp"
+    PRIVATE 
+        "win32_handmade.cpp"
+       
     PUBLIC
 )
 
