@@ -4,7 +4,7 @@
 # lable.md
 
 function(set_project_warnings project_name)
-  option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
+  option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
   set(MSVC_WARNINGS
       /W4 # Baseline reasonable warnings
@@ -38,6 +38,10 @@ function(set_project_warnings project_name)
       /w14928 # illegal copy-initialization; more than one user-defined
               # conversion has been implicitly applied
       /permissive- # standards conformance mode for MSVC compiler.
+
+      /wd4201 # delete warning (nonstandard extension used: nameless struct/union)
+      /wd4100 # delete macro load file ( unreferenced formal parameter)
+      /wd4189 #not used variables (local variable is initialized but not referenced)
   )
 
   set(CLANG_WARNINGS

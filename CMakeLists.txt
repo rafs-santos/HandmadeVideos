@@ -4,13 +4,18 @@ cmake_minimum_required(VERSION 3.20)
 project(MyGame VERSION 0.0.1)
 include(cmake/StandardProjectSettings.cmake)
 if(MSVC)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi /FC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} /MT /nologo /GR- /EHa /Od /Oi /Z7 /FC /Gm")
+
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref /SUBSYSTEM:WINDOWS,5.1 
+#                             /MAP:${PROJECT_BINARY_DIR}/win32_handmade.map")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref
+                            /MAP:${PROJECT_BINARY_DIR}/win32_handmade.map")
 endif()
 
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
-target_compile_features(project_options INTERFACE cxx_std_20)
+target_compile_features(project_options INTERFACE cxx_std_17)
 
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
@@ -32,7 +37,6 @@ target_sources(
     Handmade
     PRIVATE 
         "win32_handmade.cpp"
-       
     PUBLIC
 )
 
@@ -46,6 +50,8 @@ if (MSVC)
         gdi32.lib   
     )
 endif ()
+
+target_compile_definitions(Handmade PRIVATE HANDMADE_INTERNAL=1 HANDMADE_SLOW=1 HANDMADE_WIN32=1)
 
 # target_link_libraries(
 #     Tetris
