@@ -47,7 +47,8 @@ if (MSVC)
         project_options
         project_warnings
         user32.lib
-        gdi32.lib   
+        gdi32.lib
+        Winmm.dll   
     )
 endif ()
 
