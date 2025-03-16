@@ -6,9 +6,9 @@ include(cmake/StandardProjectSettings.cmake)
 if(MSVC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} /MT /nologo /GR- /EHa /Od /Oi /Z7 /FC /Gm")
 
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref /SUBSYSTEM:WINDOWS,5.1 
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref /SUBSYSTEM:WINDOWS,5.1 
 #                             /MAP:${PROJECT_BINARY_DIR}/win32_handmade.map")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref 
                             /MAP:${PROJECT_BINARY_DIR}/win32_handmade.map")
 endif()
 

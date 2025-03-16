@@ -14,6 +14,10 @@ internal void GameOutputSound(game_sound_output_buffer *SoundBuffer, int ToneHz)
         *SampleOut++ = SampleValue;
         *SampleOut++ = SampleValue;
         tSine += (2.0F * PI32 * 1.0F) / (float)(WavePeriod);
+        if(tSine > 2.0F * PI32)
+        {
+            tSine -= 2.0F * PI32;
+        }
     }
 
 }
@@ -58,8 +62,7 @@ internal void RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, in
 //     delete GameState;
 // }
 
-internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer,
-                                  game_sound_output_buffer *SoundBuffer)
+internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 {
     Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) ==
             ArrayCount(Input->Controllers[0].Buttons));
@@ -108,8 +111,11 @@ internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_o
             GameState->GreenOffset += 1;
         }
     }
-    
-    // TODO: Allow samples offsets here for more robust platform options
-    GameOutputSound(SoundBuffer, GameState->ToneHz);
     RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
+}
+internal void
+GameGetSoundSamples(game_memory *Memory, game_sound_output_buffer *SoundBuffer)
+{
+    game_state *GameState = (game_state *)Memory->PermanentStorage;
+    GameOutputSound(SoundBuffer, GameState->ToneHz);
 }
