@@ -1,22 +1,21 @@
 #include "handmade.h"
 
-internal void GameOutputSound(game_sound_output_buffer *SoundBuffer, int ToneHz)
+internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
-    local_persist float tSine;
     int16_t ToneVolume = 3000;
     int16_t *SampleOut = SoundBuffer->Samples;
     int WavePeriod = SoundBuffer->SamplesPerSecond / ToneHz;
     for(int SampleIndex = 0; SampleIndex < SoundBuffer->SampleCount; SampleIndex++)
     {
         // float t = 2.0F * PI32 * (float)SoundOutput->RunningSampleIndex / (float)SoundOutput->WavePeriod;
-        float SineValue = sinf(tSine);
+        float SineValue = sinf(GameState->tSine);
         int16_t SampleValue = (int16_t)(SineValue * (float)ToneVolume);
         *SampleOut++ = SampleValue;
         *SampleOut++ = SampleValue;
-        tSine += (2.0F * PI32 * 1.0F) / (float)(WavePeriod);
-        if(tSine > 2.0F * PI32)
+        GameState->tSine += (2.0F * PI32 * 1.0F) / (float)(WavePeriod);
+        if(GameState->tSine > 2.0F * PI32)
         {
-            tSine -= 2.0F * PI32;
+            GameState->tSine -= 2.0F * PI32;
         }
     }
 
@@ -38,31 +37,14 @@ internal void RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, in
             uint8_t Blue = (uint8_t)(X + XOffset);
             uint8_t Green = (uint8_t)(Y + YOffset);
             
-            *Pixel++ = ((Green << 8) | Blue);
+            *Pixel++ = ((Green << 16) | Blue);
         }
         Row += Buffer->Pitch;
     }
 }
 
-// internal game_state *GameStartup(void)
-// {
-//     game_state *GameState = new game_state;
-//     if(GameState)
-//     {
-//         GameState->BlueOffset = 0;
-//         GameState->GreenOffset = 0;
-//         GameState->ToneHz = 256;
-//     }
 
-//     return GameState;
-// }
-
-// internal void GameShutDown(game_state *GameState)
-// {
-//     delete GameState;
-// }
-
-internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) ==
             ArrayCount(Input->Controllers[0].Buttons));
@@ -72,14 +54,15 @@ internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_o
     {
         const char *Filename = __FILE__;
 
-        debug_read_file_result File = DEBUGPlatformReadEntireFile(Filename);
+        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Filename);
         if(File.Contents)
         {
-            DEBUGPlatformWriteEntireFile("R:/test.out", File.ContentsSize, File.Contents);
-            DEBUGPlatformFreeFileMemory(File.Contents);
+            Memory->DEBUGPlatformWriteEntireFile("R:/test.out", File.ContentsSize, File.Contents);
+            Memory->DEBUGPlatformFreeFileMemory(File.Contents);
         }
         
         GameState->ToneHz = 256;
+        GameState->tSine = 0.0F;
         GameState->GreenOffset = 0;
         GameState->BlueOffset = 0;
 
@@ -113,9 +96,8 @@ internal void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_o
     }
     RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 }
-internal void
-GameGetSoundSamples(game_memory *Memory, game_sound_output_buffer *SoundBuffer)
+extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
     game_state *GameState = (game_state *)Memory->PermanentStorage;
-    GameOutputSound(SoundBuffer, GameState->ToneHz);
+    GameOutputSound(GameState, SoundBuffer, GameState->ToneHz);
 }
