@@ -51,6 +51,11 @@ SafeTruncationUInt64(uint64_t Value)
     return Result;
 }
 
+struct thread_context
+{
+    int Placeholder;
+};
+
 /*
     NOTE: Services that the game provides to the platform layer.
 */
@@ -64,13 +69,13 @@ struct debug_read_file_result {
     void *Contents;
 };
 
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void* Memory)
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void* Memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 
-#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(const char *Filename)
+#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(thread_context *Thread, const char *Filename)
 typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
 
-#define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(const char *Filename, uint32_t MemorySize, void *Memory)
+#define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(thread_context *Thread, const char *Filename, uint32_t MemorySize, void *Memory)
 typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
 
 
@@ -84,6 +89,7 @@ struct game_offscreen_buffer
     int Width;
     int Height;
     int Pitch;
+    int BytesPerPixel;
 };
 
 struct game_sound_output_buffer
@@ -137,6 +143,11 @@ struct game_controller_input
 
 struct game_input
 {
+    game_button_state MouseButtons[5];
+    int32_t MouseX;
+    int32_t MouseY;
+    int32_t MouseZ;
+
     game_controller_input Controllers[5];
 };
 
@@ -162,17 +173,13 @@ struct game_memory
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
 };
 
-#define GAME_UPDATE_AND_RENDER(name) void name(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
-typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
-GAME_UPDATE_AND_RENDER(GameUpdateAndRenderStub)
-{
-}
 
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, game_sound_output_buffer *SoundBuffer)
+#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
+
+#define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
-GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
-{
-}
+
 // void GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer);
 // void GameGetSoundSamples(game_memory *Memory, game_sound_output_buffer *SoundBuffer);
 struct game_state
@@ -182,6 +189,10 @@ struct game_state
     int BlueOffset;
 
     real32 tSine;
+    
+    int PlayerX;
+    int PlayerY;
+    real32 tJump;
 };
 
 /*

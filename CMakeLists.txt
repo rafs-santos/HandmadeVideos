@@ -5,20 +5,14 @@ project(HandmadeHero VERSION 0.0.1)
 include(cmake/StandardProjectSettings.cmake)
 
 if(MSVC)
+# Export DLL symbols at compilation to avoid needing __declspec(dllexport) in front of functions
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} /MT /nologo /GR- /EHa /Od /Oi /Z7 /FC /Gm")
-
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MAP:${PROJECT_BINARY_DIR}/handmade.map /EXPORT:GameGetSoundSamples /EXPORT:GameUpdateAndRender")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref 
-#                             /MAP:${PROJECT_BINARY_DIR}/win32_handmade.map /incremental:no")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /opt:ref 
-#                             /MAP:${PROJECT_BINARY_DIR}/handmade.map /incremental:no /PDB:handmade_%date:~4")
 endif()
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_17)
-target_compile_options(project_options INTERFACE -MT -nologo -Gm- -GR -EHa- -Od -Oi -Z7 -FC)
+target_compile_options(project_options INTERFACE -MTd -nologo -Gm- -GR -EHa- -Od -Oi -Z7 -FC)
 target_compile_definitions(project_options INTERFACE HANDMADE_INTERNAL=1 HANDMADE_SLOW=1 HANDMADE_WIN32=1)
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
@@ -55,7 +49,7 @@ target_link_options(handmade PRIVATE /MAP:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TY
 add_custom_command(
   TARGET handmade
   PRE_BUILD
-  COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb' -Force"
+  COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb'"
   COMMENT "Deleting all .pdb files using PowerShell..."
 )
 
@@ -65,7 +59,7 @@ add_custom_command(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "Renaming PDB file..."
     # Generate a timestamp (this example uses PowerShell on Windows)
-    COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>/handmade.pdb\" -NewName ('handmade-' + (Get-Date -Format 'HHmmss') + '.pdb')"
+    COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>/handmade.pdb\" -NewName ('handmade-' + (Get-Random) + '.pdb')"
     COMMENT "Renaming handmade.pdb with current time stamp"
 )
 
