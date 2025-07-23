@@ -42,6 +42,8 @@ function(set_project_warnings project_name)
       /wd4201 # delete warning (nonstandard extension used: nameless struct/union)
       /wd4100 # delete macro load file ( unreferenced formal parameter)
       /wd4189 #not used variables (local variable is initialized but not referenced)
+
+      /wd4505 #Allow created functions that is not used
   )
 
   set(CLANG_WARNINGS

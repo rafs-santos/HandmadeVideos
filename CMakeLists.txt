@@ -44,24 +44,40 @@ target_link_libraries(
 # string(TIMESTAMP TODAY "%H%M%S")
 # string(CONCAT HANDFILE ${TODAY} ".pdb")
 # message(STATUS "FLAGS: " ${HANDFILE})
-target_link_options(handmade PRIVATE /MAP:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade.map /PDB:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade.pdb)
+# Generate unique timestamp at configuration time
+string(TIMESTAMP MS "%f" UTC)
+string(SUBSTRING ${MS} 0 3 MS)  # Get first 3 milliseconds digits
+string(TIMESTAMP BUILD_TIME "%Y%m%d_%H%M%S_${MS}" UTC)
 
-add_custom_command(
-  TARGET handmade
-  PRE_BUILD
-  COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb'"
-  COMMENT "Deleting all .pdb files using PowerShell..."
+
+# Set unique PDB path with timestamp
+set(UNIQUE_PDB "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade_${BUILD_TIME}.pdb")
+
+target_link_options(handmade PRIVATE 
+    /MAP:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade.map
+    /PDB:${UNIQUE_PDB})
+
+# add_custom_command(
+#   TARGET handmade
+#   PRE_BUILD
+#   COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb'"
+#   COMMENT "Deleting all .pdb files using PowerShell..."
+# )
+
+add_custom_target(
+	clear_cache
+	COMMAND ${CMAKE_COMMAND} -U BUILD_TIME ${CMAKE_BINARY_DIR}
 )
 
 
-add_custom_command(
-    TARGET handmade
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Renaming PDB file..."
-    # Generate a timestamp (this example uses PowerShell on Windows)
-    COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>/handmade.pdb\" -NewName ('handmade-' + (Get-Random) + '.pdb')"
-    COMMENT "Renaming handmade.pdb with current time stamp"
-)
+# add_custom_command(
+#     TARGET handmade
+#     POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E echo "Renaming PDB file..."
+#     # Generate a timestamp (this example uses PowerShell on Windows)
+#     COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>/handmade.pdb\" -NewName ('handmade-' + (Get-Random) + '.pdb')"
+#     COMMENT "Renaming handmade.pdb with current time stamp"
+# )
 
 # add_custom_command(TARGET handmade POST_BUILD
 #                    COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${IMAGE1}" "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/"
@@ -93,4 +109,3 @@ if (MSVC)
     # target_compile_options(Win32Handmade PRIVATE -Fmwin32_handmade.map)
 endif ()
 #------------------------------------------------------------------------
-
