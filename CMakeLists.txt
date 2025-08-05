@@ -31,6 +31,8 @@ target_sources(
     handmade
     PUBLIC
         "handmade.h"
+        "handmade_platform.h"
+        "handmade_intrinsics.h"
     PRIVATE
         "handmade.cpp"
 )
@@ -41,41 +43,30 @@ target_link_libraries(
         project_options
         project_warnings
 )
-# string(TIMESTAMP TODAY "%H%M%S")
-# string(CONCAT HANDFILE ${TODAY} ".pdb")
-# message(STATUS "FLAGS: " ${HANDFILE})
+
 # Generate unique timestamp at configuration time
-string(TIMESTAMP MS "%f" UTC)
-string(SUBSTRING ${MS} 0 3 MS)  # Get first 3 milliseconds digits
-string(TIMESTAMP BUILD_TIME "%Y%m%d_%H%M%S_${MS}" UTC)
-
-
+# Generate a random 16-digit number for unique PDB filename
+string(RANDOM LENGTH 6 ALPHABET 0123456789 RAND_SUFFIX)
 # Set unique PDB path with timestamp
-set(UNIQUE_PDB "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade_${BUILD_TIME}.pdb")
+set(UNIQUE_PDB "handmade_${RAND_SUFFIX}.pdb")
 
-target_link_options(handmade PRIVATE 
+target_link_options(handmade PRIVATE -incremental:no -opt:ref
     /MAP:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/handmade.map
-    /PDB:${UNIQUE_PDB})
+    /PDB:${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${UNIQUE_PDB})
 
-# add_custom_command(
-#   TARGET handmade
-#   PRE_BUILD
-#   COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb'"
-#   COMMENT "Deleting all .pdb files using PowerShell..."
-# )
-
-add_custom_target(
-	clear_cache
-	COMMAND ${CMAKE_COMMAND} -U BUILD_TIME ${CMAKE_BINARY_DIR}
+add_custom_command(
+  TARGET handmade
+  PRE_BUILD
+  COMMAND powershell -Command "Remove-Item -Path '\"$<TARGET_FILE_DIR:handmade>\\handmade*.pdb'"
+  COMMENT "Deleting all .pdb files using PowerShell..."
 )
-
 
 # add_custom_command(
 #     TARGET handmade
 #     POST_BUILD
 #     COMMAND ${CMAKE_COMMAND} -E echo "Renaming PDB file..."
 #     # Generate a timestamp (this example uses PowerShell on Windows)
-#     COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>/handmade.pdb\" -NewName ('handmade-' + (Get-Random) + '.pdb')"
+#     COMMAND powershell -Command "Rename-Item \"$<TARGET_FILE_DIR:handmade>\\handmade_temp.pdb\" -NewName ('handmade-' + (Get-Random) + '.pdb')"
 #     COMMENT "Renaming handmade.pdb with current time stamp"
 # )
 

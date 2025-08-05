@@ -389,11 +389,19 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
                            int WindowWidth, int WindowHeight
                            )
 {
+    int OffsetX = 10;
+    int OffsetY = 10;
+    PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+    PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight, BLACKNESS);
+    
+    PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+    PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth, WindowHeight, BLACKNESS);
+    
     //NOTE: For prototyping purposes, we're going to always blit 1-to-1 pixels to make sure
     // we don't introduce artifacts with stretching while we are learning to code the renderer!
     StretchDIBits(
         DeviceContext,
-        0, 0, Buffer->Width, Buffer->Height,
+        OffsetX, OffsetY, Buffer->Width, Buffer->Height,
         0, 0, Buffer->Width, Buffer->Height,
         Buffer->Memory,
         &Buffer->Info,
@@ -541,7 +549,7 @@ Win32ProcessKeyboardMessage(game_button_state *NewState, bool32 IsDown)
     if(NewState->EndedDown != IsDown)
     {
         NewState->EndedDown = IsDown;
-        ++NewState->HalfTransistionCount;
+        ++NewState->HalfTransitionCount;
     }
 }
 
@@ -549,11 +557,8 @@ internal void
 Win32ProcessXInputDigitalButton(DWORD XInputButtonState, game_button_state *OldState, DWORD ButtonBit,
                                 game_button_state *NewState)
 {
-    if(OldState->EndedDown == NewState->EndedDown)
-    {
-        NewState->EndedDown = ((XInputButtonState & ButtonBit) == ButtonBit);
-        NewState->HalfTransistionCount = (OldState->EndedDown != NewState->EndedDown) ? 1 : 0;
-    }
+    NewState->EndedDown = ((XInputButtonState & ButtonBit) == ButtonBit);
+    NewState->HalfTransitionCount = (OldState->EndedDown != NewState->EndedDown) ? 1 : 0;
 }
 
 internal real32 Win32ProcessInputStickValue(SHORT Value, SHORT DeadZoneThresholdLeft, SHORT DeadZoneThresholdRight)
@@ -1058,7 +1063,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE hPrevInstance, PSTR pCmdLine, i
                 game_input Input[2] = {};
                 game_input *NewInput = &Input[0];
                 game_input *OldInput = &Input[1];
-                NewInput->dtForFrame = TargetSecondsPerFrame;
                 
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
@@ -1077,6 +1081,7 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE hPrevInstance, PSTR pCmdLine, i
                 uint64_t LastCycleCount = __rdtsc();
                 while(GlobalRunning)
                 {
+                    NewInput->dtForFrame = TargetSecondsPerFrame;
                     FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
                     if(CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime))
                     {
@@ -1141,7 +1146,6 @@ int WINAPI WinMain(HINSTANCE Instance, HINSTANCE hPrevInstance, PSTR pCmdLine, i
                                 // Controller is connected
                                 XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
 
-                                
                                 NewController->StickAverageX = Win32ProcessInputStickValue(
                                     Pad->sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,
                                     XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
